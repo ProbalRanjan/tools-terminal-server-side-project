@@ -1,8 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
+
+const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
@@ -25,8 +26,7 @@ async function run() {
         // Get all tools from database
         app.get('/tools', async (req, res) => {
             const query = {};
-            const cursor = toolsCollection.find(query);
-            const tools = await cursor.toArray();
+            const tools = await toolsCollection.find(query).toArray();
             res.send(tools);
         })
 
@@ -38,6 +38,15 @@ async function run() {
             res.send(tool);
         })
 
+        // Get orders from specific user by email
+        app.get('/order', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const orders = await orderCollection.find(query).toArray();
+            res.send(orders);
+        })
+
+        // Post a order to database
         app.post('/order', async (req, res) => {
             const order = req.body;
             const result = await orderCollection.insertOne(order);
