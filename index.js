@@ -20,6 +20,7 @@ async function run() {
         await client.connect();
         const toolsCollection = client.db('tools_terminal').collection('tools');
         const reviewsCollection = client.db('tools_terminal').collection('reviews');
+        const orderCollection = client.db('tools_terminal').collection('orders');
 
         // Get all tools from database
         app.get('/tools', async (req, res) => {
@@ -29,11 +30,18 @@ async function run() {
             res.send(tools);
         })
 
+        // Get single tool from database by id
         app.get('/purchase/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const tool = await toolsCollection.findOne(query);
             res.send(tool);
+        })
+
+        app.post('/order', async (req, res) => {
+            const order = req.body;
+            const result = await orderCollection.insertOne(order);
+            res.send(result);
         })
 
         // Get all reviews from database
