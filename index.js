@@ -45,6 +45,19 @@ async function run() {
         const orderCollection = client.db('tools_terminal').collection('orders');
         const userCollection = client.db('tools_terminal').collection('users');
 
+        // Verify Admin
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({ email: requester });
+
+            if (requesterAccount.role === 'admin') {
+                next();
+            }
+            else {
+                res.status(403).send({ message: 'Forbidden' });
+            }
+        }
+
         // Get all tools from database
         app.get('/tools', async (req, res) => {
             const query = {};
@@ -53,7 +66,7 @@ async function run() {
         })
 
         // Post a product to database
-        app.post('/tools', async (req, res) => {
+        app.post('/tools', verifyJWT, verifyAdmin, async (req, res) => {
             const newTool = req.body;
             const result = await toolsCollection.insertOne(newTool);
             res.send(result);
@@ -110,25 +123,14 @@ async function run() {
         })
 
         // Update a user role to admin
-        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
-            const requester = req.decoded.email;
-            const requesterAccount = await userCollection.findOne({ email: requester });
-
-            if (requesterAccount.role === 'admin') {
-
-                const filter = { email: email };
-                const updateDoc = {
-                    $set: { role: 'admin' },
-                }
-                const result = await userCollection.updateOne(filter, updateDoc);
-                res.send(result);
-
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
             }
-
-            else {
-                res.status(403).send({ message: 'Forbidden' });
-            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
         })
 
         // Get all admin
@@ -143,6 +145,13 @@ async function run() {
         app.get('/reviews', async (req, res) => {
             const reviews = await reviewsCollection.find().toArray();
             res.send(reviews);
+        })
+
+        // Post a product to database
+        app.post('/reviews', async (req, res) => {
+            const newReview = req.body;
+            const result = await reviewsCollection.insertOne(newReview);
+            res.send(result);
         })
 
     }
