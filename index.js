@@ -15,6 +15,26 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.b3gie.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+// Verify JWT token
+const verifyJWT = (req, res, next) => {
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'Unauthorized' });
+    }
+
+    const accessToken = authHeader.split(' ')[1];
+    jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden' });
+        }
+        req.decoded = decoded;
+        next();
+
+    });
+}
+
 // MongoDB CRUD Operation
 async function run() {
 
