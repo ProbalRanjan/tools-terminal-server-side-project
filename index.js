@@ -105,12 +105,31 @@ async function run() {
         // Update a user role to admin
         app.put('/user/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
-            const filter = { email: email };
-            const updateDoc = {
-                $set: { role: 'admin' },
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({ email: requester });
+
+            if (requesterAccount.role === 'admin') {
+
+                const filter = { email: email };
+                const updateDoc = {
+                    $set: { role: 'admin' },
+                }
+                const result = await userCollection.updateOne(filter, updateDoc);
+                res.send(result);
+
             }
-            const result = await userCollection.updateOne(filter, updateDoc);
-            res.send(result);
+
+            else {
+                res.status(403).send({ message: 'Forbidden' });
+            }
+        })
+
+        // Get all admin
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin });
         })
 
         // Get all reviews from database
