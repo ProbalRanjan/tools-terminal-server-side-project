@@ -72,6 +72,14 @@ async function run() {
             res.send(result);
         })
 
+        // Delete tool from Database
+        app.delete('/tools/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await toolsCollection.deleteOne(query);
+            res.send(result);
+        })
+
         // Get single tool from database by id
         app.get('/purchase/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
