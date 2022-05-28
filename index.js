@@ -53,7 +53,7 @@ async function run() {
         })
 
         // Get single tool from database by id
-        app.get('/purchase/:id', async (req, res) => {
+        app.get('/purchase/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const tool = await toolsCollection.findOne(query);
@@ -83,7 +83,7 @@ async function run() {
         })
 
         // Get all users from database
-        app.get('/user', verifyJWT, async (req, res) => {
+        app.get('/users', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
         })
@@ -100,6 +100,17 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateDoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
             res.send({ result, token });
+        })
+
+        // Update a user role to admin
+        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
         })
 
         // Get all reviews from database
