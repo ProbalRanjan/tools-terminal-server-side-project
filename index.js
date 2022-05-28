@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
@@ -22,6 +23,7 @@ async function run() {
         const toolsCollection = client.db('tools_terminal').collection('tools');
         const reviewsCollection = client.db('tools_terminal').collection('reviews');
         const orderCollection = client.db('tools_terminal').collection('orders');
+        const userCollection = client.db('tools_terminal').collection('users');
 
         // Get all tools from database
         app.get('/tools', async (req, res) => {
@@ -39,11 +41,18 @@ async function run() {
         })
 
         // Get orders from specific user by email
-        app.get('/order', async (req, res) => {
+        app.get('/order', verifyJWT, async (req, res) => {
             const email = req.query.email;
-            const query = { email: email };
-            const orders = await orderCollection.find(query).toArray();
-            res.send(orders);
+            const decodedEmail = req.decoded.email;
+            if (email === decodedEmail) {
+                const query = { email: email };
+                const orders = await orderCollection.find(query).toArray();
+                return res.send(orders);
+            }
+
+            else {
+                return res.status(403).send({ message: 'Forbidden' });
+            }
         })
 
         // Post a order to database
@@ -51,6 +60,20 @@ async function run() {
             const order = req.body;
             const result = await orderCollection.insertOne(order);
             res.send(result);
+        })
+
+        // Put/update users on the database
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            }
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            res.send({ result, token });
         })
 
         // Get all reviews from database
