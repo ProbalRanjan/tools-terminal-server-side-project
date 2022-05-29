@@ -124,21 +124,15 @@ async function run() {
             }
         });
 
-        // Get user order for payment
+        // Get user's order for payment
         app.get('/order/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const order = await orderCollection.findOne(query);
             res.send(order);
-        })
+        });
 
-        // Post a order to database
-        app.post('/order', async (req, res) => {
-            const order = req.body;
-            const result = await orderCollection.insertOne(order);
-            res.send(result);
-        })
-
+        // Update order after payment
         app.patch('/order/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const payment = req.body;
@@ -153,6 +147,20 @@ async function run() {
             const result = await paymentCollection.insertOne(payment);
             res.send(orderUpdate)
         });
+
+        // Post a order to database
+        app.post('/order', async (req, res) => {
+            const order = req.body;
+            const result = await orderCollection.insertOne(order);
+            res.send(result);
+        })
+
+        app.delete('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(query);
+            res.send(result);
+        })
 
         // Get all users from database
         app.get('/users', async (req, res) => {
