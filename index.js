@@ -63,14 +63,14 @@ async function run() {
             const query = {};
             const tools = await toolsCollection.find(query).toArray();
             res.send(tools);
-        })
+        });
 
         // Post a product to database
         app.post('/tools', verifyJWT, verifyAdmin, async (req, res) => {
             const newTool = req.body;
             const result = await toolsCollection.insertOne(newTool);
             res.send(result);
-        })
+        });
 
         // Delete tool from Database
         app.delete('/tools/:id', verifyJWT, verifyAdmin, async (req, res) => {
@@ -78,7 +78,7 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const result = await toolsCollection.deleteOne(query);
             res.send(result);
-        })
+        });
 
         // Get single tool from database by id
         app.get('/purchase/:id', verifyJWT, async (req, res) => {
@@ -86,7 +86,13 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const tool = await toolsCollection.findOne(query);
             res.send(tool);
-        })
+        });
+
+        // Get all orders from every users
+        app.get('/allOrder', async (req, res) => {
+            const allOrders = await orderCollection.find().toArray();
+            res.send(allOrders);
+        });
 
         // Get orders from specific user by email
         app.get('/order', verifyJWT, async (req, res) => {
@@ -101,7 +107,7 @@ async function run() {
             else {
                 return res.status(403).send({ message: 'Forbidden' });
             }
-        })
+        });
 
         // Post a order to database
         app.post('/order', async (req, res) => {
@@ -111,13 +117,13 @@ async function run() {
         })
 
         // Get all users from database
-        app.get('/users', verifyJWT, async (req, res) => {
+        app.get('/users', async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
-        })
+        });
 
         // Put/update users on the database
-        app.put('/user/:email', async (req, res) => {
+        app.put('/users/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
             const filter = { email: email };
@@ -128,18 +134,7 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateDoc, options);
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: 60 * 60 });
             res.send({ result, token });
-        })
-
-        // Update a user role to admin
-        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
-            const email = req.params.email;
-            const filter = { email: email };
-            const updateDoc = {
-                $set: { role: 'admin' },
-            }
-            const result = await userCollection.updateOne(filter, updateDoc);
-            res.send(result);
-        })
+        });
 
         // Get all admin
         app.get('/admin/:email', async (req, res) => {
@@ -147,20 +142,31 @@ async function run() {
             const user = await userCollection.findOne({ email: email });
             const isAdmin = user.role === 'admin';
             res.send({ admin: isAdmin });
-        })
+        });
+
+        // Update a user role to admin
+        app.put('/users/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: { role: 'admin' },
+            }
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
 
         // Get all reviews from database
         app.get('/reviews', async (req, res) => {
             const reviews = await reviewsCollection.find().toArray();
             res.send(reviews);
-        })
+        });
 
         // Post a product to database
         app.post('/reviews', async (req, res) => {
             const newReview = req.body;
             const result = await reviewsCollection.insertOne(newReview);
             res.send(result);
-        })
+        });
 
     }
 
