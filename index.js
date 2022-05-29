@@ -3,6 +3,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -58,6 +59,10 @@ async function run() {
             }
         }
 
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+
+        })
+
         // Get all tools from database
         app.get('/tools', async (req, res) => {
             const query = {};
@@ -89,7 +94,7 @@ async function run() {
         });
 
         // Get all orders from every users
-        app.get('/allOrder', async (req, res) => {
+        app.get('/orders', async (req, res) => {
             const allOrders = await orderCollection.find().toArray();
             res.send(allOrders);
         });
@@ -108,6 +113,14 @@ async function run() {
                 return res.status(403).send({ message: 'Forbidden' });
             }
         });
+
+        // Get user order for payment
+        app.get('/order/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const order = await orderCollection.findOne(query);
+            res.send(order);
+        })
 
         // Post a order to database
         app.post('/order', async (req, res) => {
