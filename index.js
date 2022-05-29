@@ -45,6 +45,7 @@ async function run() {
         const reviewsCollection = client.db('tools_terminal').collection('reviews');
         const orderCollection = client.db('tools_terminal').collection('orders');
         const userCollection = client.db('tools_terminal').collection('users');
+        const paymentCollection = client.db('tools_terminal').collection('payments');
 
         // Verify Admin
         const verifyAdmin = async (req, res, next) => {
@@ -59,6 +60,7 @@ async function run() {
             }
         }
 
+        // Post for payment
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
             const service = req.body;
             const price = service.totalPrice;
@@ -136,6 +138,21 @@ async function run() {
             const result = await orderCollection.insertOne(order);
             res.send(result);
         })
+
+        app.patch('/order/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId,
+                }
+            }
+            const orderUpdate = await orderCollection.updateOne(filter, updateDoc);
+            const result = await paymentCollection.insertOne(payment);
+            res.send(orderUpdate)
+        });
 
         // Get all users from database
         app.get('/users', async (req, res) => {
