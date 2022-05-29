@@ -155,6 +155,20 @@ async function run() {
             res.send(result);
         })
 
+        // Update order after deliver
+        app.put('/order/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    delivered: true
+                }
+            }
+            const orderUpdate = await orderCollection.updateOne(filter, updateDoc);
+            res.send(orderUpdate);
+        });
+
+        // Delete for unpaid order
         app.delete('/orders/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
