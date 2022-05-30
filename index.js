@@ -190,6 +190,14 @@ async function run() {
             res.send(users);
         });
 
+        // Get user info from database
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            res.send(user);
+        });
+
         // Put/update users on the database
         app.put('/users/:email', async (req, res) => {
             const email = req.params.email;
