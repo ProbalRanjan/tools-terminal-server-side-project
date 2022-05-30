@@ -191,12 +191,29 @@ async function run() {
         });
 
         // Get user info from database
-        app.get('/users/:email', async (req, res) => {
+        app.get('/user/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
             const user = await userCollection.findOne(query);
             res.send(user);
         });
+
+        // Add/Update user info
+        app.put('/user/:email', async (req, res) => {
+            const user = req.body;
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: {
+                    address: user.address,
+                    education: user.education,
+                    linkedinLink: user.linkedinLink,
+                    phoneNumber: user.phoneNumber,
+                }
+            }
+            const userUpdate = await userCollection.updateOne(filter, updateDoc);
+            res.send(userUpdate);
+        })
 
         // Put/update users on the database
         app.put('/users/:email', async (req, res) => {
